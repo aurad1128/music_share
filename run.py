@@ -11,9 +11,10 @@ import sys
 if __name__ == '__main__':
     print('=' * 50)
     print('  音乐分享与推荐网站 -- 乐享')
-    print('  访问地址: http://127.0.0.1:5000')
+    print('  本地访问: http://127.0.0.1:5000')
+    print('  局域网访问: http://10.236.76.81:5000')
     print('  测试账号: admin / admin123')
     print('  按 Ctrl+C 停止服务器')
     print('=' * 50)
     sys.stdout.flush()
-    serve(app, host='127.0.0.1', port=5000)
+    serve(app, host='0.0.0.0', port=5000)
