@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}乐享 — 发现你的音乐世界{% endblock %}
+
+{% block content %}
+<!-- ===== Hero 区域 ===== -->
+<div class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1 class="neon-text">发现你的<br>音乐世界</h1>
+            <p class="lead mt-3">
+                分享你最爱的旋律，探索风格各异的音乐作品。<br>
+                从流行到古典，从摇滚到电子 — 这里有你想要的一切声音。
+            </p>
+            <div class="mt-4 d-flex gap-3 flex-wrap">
+                <a href="{{ url_for('main.browse') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-compass me-2"></i>开始探索
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('song.upload') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-upload me-2"></i>上传音乐
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>立即加入
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5 d-flex flex-column justify-content-center align-items-center">
+            <i class="fas fa-headphones" style="font-size: 11rem; opacity: 0.08; color: var(--primary-light);"></i>
+            <div class="spectrum-bars">
+                <div class="sbar"></div><div class="sbar"></div>
+                <div class="sbar"></div><div class="sbar"></div>
+                <div class="sbar"></div><div class="sbar"></div>
+                <div class="sbar"></div><div class="sbar"></div>
+            </div>
+            <div class="hero-visualizer">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 猜你喜欢（登录用户专属） ===== -->
+{% if current_user.is_authenticated and recommended %}
+<div class="mb-4">
+    <div class="section-header">
+        <h4><i class="fas fa-lightbulb" style="color: #f59e0b;"></i>猜你喜欢</h4>
+        <span class="text-muted small">基于你的浏览记录推荐</span>
+    </div>
+    <div class="row card-stagger">
+        {% for song in recommended %}
+        <div class="col-md-2 col-sm-4 col-6 mb-3 animate-in">
+            <div class="card song-card h-100">
+                <span class="style-badge">{{ song.style }}</span>
+                <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                    {% if song.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                         class="card-img-top" alt="{{ song.title }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center"
+                         style="height: 160px; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                        <i class="fas fa-music" style="font-size: 2rem; opacity: 0.2;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="play-overlay" style="height: 160px;">
+                        <div class="play-circle"><i class="fas fa-play"></i></div>
+                    </div>
+                    <div class="wave-bars">
+                        <div class="wb"></div><div class="wb"></div><div class="wb"></div>
+                        <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+                    </div>
+                </a>
+                <div class="card-body py-2">
+                    <h6 class="card-title text-truncate small">{{ song.title }}</h6>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== 关注动态（登录用户专属） ===== -->
+{% if current_user.is_authenticated and feed_songs %}
+<div class="mb-4">
+    <div class="section-header">
+        <h4><i class="fas fa-rss" style="color: var(--primary-light);"></i>关注动态</h4>
+        <span class="text-muted small">你关注的用户最近上传</span>
+    </div>
+    <div class="row card-stagger">
+        {% for song in feed_songs %}
+        <div class="col-md-2 col-sm-4 col-6 mb-3 animate-in">
+            <div class="card song-card h-100">
+                <span class="style-badge">{{ song.style }}</span>
+                <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                    {% if song.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                         class="card-img-top" alt="{{ song.title }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center"
+                         style="height: 160px; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                        <i class="fas fa-music" style="font-size: 2rem; opacity: 0.2;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="play-overlay" style="height: 160px;">
+                        <div class="play-circle"><i class="fas fa-play"></i></div>
+                    </div>
+                </a>
+                <div class="card-body py-2">
+                    <h6 class="card-title text-truncate small">{{ song.title }}</h6>
+                    <small class="text-muted">{{ song.uploader.username }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== 风格快捷入口 ===== -->
+<div class="mb-4">
+    <div class="section-header">
+        <h4><i class="fas fa-tags"></i>风格分类</h4>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-sm">查看全部 <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    <div>
+        {% set style_classes = {
+            '流行': 'style-pop', '摇滚': 'style-rock', '说唱': 'style-rap',
+            '电子': 'style-electronic', '古典': 'style-classical',
+            '民谣': 'style-folk', '爵士': 'style-jazz', 'R&B': 'style-rnb',
+            '其他': 'style-other'
+        } %}
+        {% for style in styles %}
+        <a href="{{ url_for('main.browse_by_style', style=style) }}"
+           class="style-tag {{ style_classes.get(style, 'style-other') }}">
+            {{ style }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- ===== 最新上传 ===== -->
+    <div class="col-lg-8">
+        <div class="section-header">
+            <h4><i class="fas fa-clock"></i>最新上传</h4>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('song.upload') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>上传
+            </a>
+            {% endif %}
+        </div>
+        <div class="row card-stagger">
+            {% if latest_songs %}
+            {% for song in latest_songs %}
+            <div class="col-md-4 col-sm-6 mb-4 animate-in">
+                <div class="card song-card h-100">
+                    <span class="style-badge">{{ song.style }}</span>
+                    <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                        {% if song.cover_image %}
+                        <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                             class="card-img-top" alt="{{ song.title }}">
+                        {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center"
+                             style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                            <i class="fas fa-music" style="font-size: 3rem; opacity: 0.2;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="play-overlay">
+                            <div class="play-circle">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <!-- 声波纹 -->
+                        <div class="wave-bars">
+                            <div class="wb"></div><div class="wb"></div>
+                            <div class="wb"></div><div class="wb"></div>
+                            <div class="wb"></div><div class="wb"></div>
+                            <div class="wb"></div>
+                        </div>
+                    </a>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">{{ song.title }}</h6>
+                        <p class="card-text small text-truncate" style="color: var(--primary-light); margin: 0;">
+                            {{ song.artist }}{% if song.album %} · {{ song.album }}{% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small style="color: var(--text-muted);">
+                                <i class="far fa-heart"></i> {{ song.favorite_count }}
+                                <i class="far fa-comment ms-2"></i> {{ song.comment_count }}
+                            </small>
+                            <small style="color: var(--text-muted);">{{ song.created_at.strftime('%m-%d') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-music"></i>
+                    <p>还没有人上传歌曲，成为第一个分享音乐的人吧！</p>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('song.upload') }}" class="btn btn-primary mt-3">上传音乐</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== 热门排行侧栏 ===== -->
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <div class="section-header mb-3">
+                <h4 style="font-size: 1.1rem;"><i class="fas fa-fire" style="color: #f59e0b;"></i>热门排行</h4>
+                <a href="{{ url_for('main.ranking') }}" class="btn btn-outline-light btn-sm">完整榜单</a>
+            </div>
+            {% if hot_songs %}
+            {% for song in hot_songs %}
+            <a href="{{ url_for('song.detail', song_id=song.id) }}"
+               class="text-decoration-none d-flex align-items-center mb-3 p-2 rounded"
+               style="transition: var(--transition);"
+               onmouseover="this.style.background='rgba(139,92,246,0.08)';"
+               onmouseout="this.style.background='transparent';">
+                <span class="rank-number me-3 rank-{{ loop.index if loop.index <= 3 else '' }}"
+                      style="{% if loop.index > 3 %}color: var(--text-muted); background: var(--bg-glass);{% endif %}">
+                    {{ loop.index }}
+                </span>
+                {% if song.cover_image %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                     class="rec-cover me-3" alt="{{ song.title }}">
+                {% else %}
+                <div class="rec-cover me-3 d-flex align-items-center justify-content-center"
+                     style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                    <i class="fas fa-music" style="opacity: 0.3; font-size: 0.8rem;"></i>
+                </div>
+                {% endif %}
+                <div class="flex-grow-1 min-w-0">
+                    <div class="text-truncate" style="color: var(--text-primary); font-weight: 500; font-size: 0.9rem;">
+                        {{ song.title }}
+                    </div>
+                    <small style="color: var(--primary-light);">{{ song.artist }}</small>
+                </div>
+                <small style="color: var(--text-muted); margin-left: 8px;">
+                    <i class="far fa-heart"></i> {{ song.favorite_count }}
+                </small>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-3" style="color: var(--text-muted);">
+                <i class="fas fa-inbox"></i> 暂无排行数据
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 快速入口 -->
+        <div class="card p-4 mt-4">
+            <h5 style="font-size: 1.05rem; font-weight: 700; color: #ffffff;" class="mb-3">
+                <i class="fas fa-bolt" style="color: var(--accent);"></i> 快速入口
+            </h5>
+            <a href="{{ url_for('main.browse') }}" class="quick-link-btn w-100 mb-2 text-start">
+                <i class="fas fa-guitar me-2"></i>风格分类浏览
+            </a>
+            <a href="{{ url_for('main.ranking') }}" class="quick-link-btn w-100 mb-2 text-start">
+                <i class="fas fa-trophy me-2"></i>音乐排行榜
+            </a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('playlist.my_playlists') }}" class="quick-link-btn w-100 text-start">
+                <i class="fas fa-list me-2"></i>我的歌单
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ===== 全部歌曲 ===== -->
+{% if all_songs and all_songs.items %}
+<div class="mt-5">
+    <div class="section-header">
+        <h4><i class="fas fa-record-vinyl"></i>全部歌曲</h4>
+    </div>
+    <div class="row card-stagger">
+        {% for song in all_songs.items %}
+        <div class="col-md-3 col-sm-6 mb-4 animate-in">
+            <div class="card song-card h-100">
+                <span class="style-badge">{{ song.style }}</span>
+                <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                    {% if song.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                         class="card-img-top" alt="{{ song.title }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center"
+                         style="background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                        <i class="fas fa-music" style="font-size: 2.5rem; opacity: 0.2;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="play-overlay">
+                        <div class="play-circle">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                </a>
+                <div class="card-body">
+                    <h6 class="card-title text-truncate">{{ song.title }}</h6>
+                    <p class="card-text small text-truncate" style="color: var(--primary-light); margin: 0;">{{ song.artist }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if all_songs.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if all_songs.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.index', page=all_songs.prev_num) }}"><i class="fas fa-chevron-left"></i></a>
+            </li>
+            {% endif %}
+            {% for p in all_songs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == all_songs.page else '' }}">
+                <a class="page-link" href="{{ url_for('main.index', page=p) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if all_songs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.index', page=all_songs.next_num) }}"><i class="fas fa-chevron-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

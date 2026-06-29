@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} 的个人主页 — 乐享{% endblock %}
+
+{% block content %}
+<!-- 个人资料头部 -->
+<div class="profile-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-auto text-center mb-3 mb-md-0">
+            {% if profile_user.avatar and profile_user.avatar != 'default_avatar.png' %}
+            <img src="{{ url_for('static', filename='uploads/avatars/' + profile_user.avatar) }}"
+                 class="profile-avatar" alt="{{ profile_user.username }}"
+                 style="object-fit: cover;">
+            {% else %}
+            <div class="profile-avatar d-flex align-items-center justify-content-center"
+                 style="background: linear-gradient(135deg, var(--primary), var(--accent)); font-size: 2.5rem; color: white;">
+                {{ profile_user.username[0] }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md">
+            <h3 class="text-light">{{ profile_user.username }}
+                {% if profile_user.role == 'admin' %}
+                <span class="badge" style="background: var(--accent); font-size: 0.7rem;">管理员</span>
+                {% endif %}
+            </h3>
+            <p class="text-muted">
+                <i class="far fa-envelope"></i> {{ profile_user.email }}
+                <span class="mx-2">|</span>
+                <i class="far fa-calendar"></i> 注册于 {{ profile_user.created_at.strftime('%Y-%m-%d') }}
+            </p>
+            {% if profile_user.bio %}
+            <p class="text-light" style="opacity: 0.8;">{{ profile_user.bio }}</p>
+            {% endif %}
+            <!-- 关注统计 -->
+            <div class="d-flex gap-3 my-2">
+                <a href="{{ url_for('main.user_following', user_id=profile_user.id) }}"
+                   class="text-decoration-none">
+                    <strong class="text-light">{{ following_count }}</strong>
+                    <small class="text-muted">关注</small>
+                </a>
+                <a href="{{ url_for('main.user_followers', user_id=profile_user.id) }}"
+                   class="text-decoration-none">
+                    <strong id="follower-count" class="text-light">{{ follower_count }}</strong>
+                    <small class="text-muted">粉丝</small>
+                </a>
+            </div>
+            <div class="d-flex gap-2">
+                {% if current_user.is_authenticated and current_user.id == profile_user.id %}
+                <a href="{{ url_for('main.edit_profile') }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-edit me-1"></i>编辑资料
+                </a>
+                {% elif current_user.is_authenticated %}
+                <button id="follow-btn"
+                        class="btn btn-sm {{ 'btn-primary' if is_following else 'btn-outline-light' }}"
+                        onclick="toggleFollow({{ profile_user.id }})">
+                    <i class="fas {{ 'fa-user-check' if is_following else 'fa-user-plus' }} me-1"></i>
+                    <span id="follow-text">{{ '已关注' if is_following else '关注' }}</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 上传的作品 -->
+    <div class="col-lg-8">
+        <div class="card p-3 mb-4">
+            <h5 class="text-light mb-3">
+                <i class="fas fa-upload"></i> 上传的音乐作品
+                <small class="text-muted ms-2">(共 {{ songs|length }} 首)</small>
+            </h5>
+
+            {% if songs %}
+            <div class="row">
+                {% for song in songs %}
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card song-card h-100">
+                        <span class="style-badge">{{ song.style }}</span>
+                        <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                            {% if song.cover_image %}
+                            <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                                 class="card-img-top" alt="{{ song.title }}">
+                            {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center"
+                                 style="height: 150px; background: linear-gradient(135deg, var(--bg-elevated), var(--primary-dark));">
+                                <i class="fas fa-music" style="font-size: 2rem; color: rgba(255,255,255,0.2);"></i>
+                            </div>
+                            {% endif %}
+                        </a>
+                        <div class="card-body">
+                            <h6 class="card-title text-truncate">{{ song.title }}</h6>
+                            <small class="text-muted"><i class="far fa-heart"></i> {{ song.favorite_count }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-3">
+                <i class="fas fa-music"></i> 还没有上传作品
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 创建的歌单 -->
+    <div class="col-lg-4">
+        <div class="card p-3">
+            <h5 class="text-light mb-3">
+                <i class="fas fa-list"></i> 创建的歌单
+                <small class="text-muted ms-2">(共 {{ playlists|length }} 个)</small>
+            </h5>
+            {% if playlists %}
+            {% for playlist in playlists %}
+            <a href="{{ url_for('playlist.detail', playlist_id=playlist.id) }}"
+               class="text-decoration-none d-flex align-items-center p-2 rounded mb-2"
+               onmouseover="this.style.background='rgba(108,92,231,0.15)';"
+               onmouseout="this.style.background='transparent';">
+                <i class="fas fa-list me-2" style="color: var(--primary);"></i>
+                <div class="flex-grow-1">
+                    <div style="color: #e0e0e0;">{{ playlist.name }}</div>
+                    <small class="text-muted">{{ playlist.songs.count() }} 首歌</small>
+                </div>
+                {% if not playlist.is_public %}
+                <span class="badge" style="background: #636e72;">私有</span>
+                {% endif %}
+            </a>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted small">还没有创建歌单</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFollow(userId) {
+    fetch('/follow/' + userId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'followed') {
+            document.getElementById('follow-btn').classList.remove('btn-outline-light');
+            document.getElementById('follow-btn').classList.add('btn-primary');
+            document.getElementById('follow-text').textContent = '已关注';
+            document.getElementById('follow-btn').querySelector('i').classList.replace('fa-user-plus', 'fa-user-check');
+        } else if (data.status === 'unfollowed') {
+            document.getElementById('follow-btn').classList.add('btn-outline-light');
+            document.getElementById('follow-btn').classList.remove('btn-primary');
+            document.getElementById('follow-text').textContent = '关注';
+            document.getElementById('follow-btn').querySelector('i').classList.replace('fa-user-check', 'fa-user-plus');
+        }
+        if (data.follower_count !== undefined) {
+            document.getElementById('follower-count').textContent = data.follower_count;
+        }
+    });
+}
+</script>
+{% endblock %}

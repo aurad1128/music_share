@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}歌曲管理 · 管理后台 — 乐享{% endblock %}
+
+{% block content %}
+<h3 class="text-light mb-4">
+    <i class="fas fa-shield-alt" style="color: var(--accent);"></i> 管理员后台
+</h3>
+
+<div class="row">
+    <!-- 侧栏 -->
+    <div class="col-lg-3 mb-4">
+        <div class="admin-sidebar">
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.dashboard') }}" class="list-group-item">
+                    <i class="fas fa-tachometer-alt me-2"></i> 仪表盘
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="list-group-item">
+                    <i class="fas fa-users me-2"></i> 用户管理
+                </a>
+                <a href="{{ url_for('admin.songs') }}" class="list-group-item active">
+                    <i class="fas fa-music me-2"></i> 歌曲管理
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 歌曲列表 -->
+    <div class="col-lg-9">
+        <div class="card p-3">
+            <h5 class="text-light mb-3">
+                <i class="fas fa-music"></i> 歌曲管理
+                <small class="text-muted ms-2">(共 {{ songs.total }} 首歌曲)</small>
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle" style="--bs-table-bg: transparent;">
+                    <thead>
+                        <tr>
+                            <th>封面</th>
+                            <th>歌曲名称</th>
+                            <th>歌手</th>
+                            <th>风格</th>
+                            <th>上传者</th>
+                            <th>收藏</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for song in songs.items %}
+                        <tr>
+                            <td>
+                                {% if song.cover_image %}
+                                <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                                     width="40" height="40" class="rounded" style="object-fit: cover;">
+                                {% else %}
+                                <div class="rounded d-flex align-items-center justify-content-center"
+                                     style="width:40px; height:40px; background: linear-gradient(135deg,#2d1b69,var(--primary));">
+                                    <i class="fas fa-music" style="color: rgba(255,255,255,0.3); font-size: 0.8rem;"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('song.detail', song_id=song.id) }}"
+                                   style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                                    {{ song.title }}
+                                </a>
+                            </td>
+                            <td><small>{{ song.artist }}</small></td>
+                            <td>
+                                <span class="style-tag {{ {
+                                    '流行':'style-pop','摇滚':'style-rock','说唱':'style-rap',
+                                    '电子':'style-electronic','古典':'style-classical',
+                                    '民谣':'style-folk','爵士':'style-jazz','R&B':'style-rnb'
+                                }.get(song.style, 'style-other') }}" style="font-size: 0.7rem; padding: 2px 10px;">
+                                    {{ song.style }}
+                                </span>
+                            </td>
+                            <td><small>{{ song.uploader.username }}</small></td>
+                            <td><small><i class="far fa-heart"></i> {{ song.favorite_count }}</small></td>
+                            <td><small>{{ song.created_at.strftime('%m-%d') }}</small></td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.delete_song', song_id=song.id) }}"
+                                      onsubmit="return confirm('确定要删除歌曲「{{ song.title }}」吗？此操作不可撤销。');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            title="管理员强制删除">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if not songs.items %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox"></i> 暂无歌曲
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if songs.pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if songs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.songs', page=songs.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for p in songs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                    <li class="page-item {{ 'active' if p == songs.page else '' }}">
+                        <a class="page-link" href="{{ url_for('admin.songs', page=p) }}">{{ p }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if songs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.songs', page=songs.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

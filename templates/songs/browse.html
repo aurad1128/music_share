@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{% if current_style %}{{ current_style }} · {% endif %}风格浏览 — 乐享{% endblock %}
+
+{% block content %}
+<h3 class="text-light mb-3">
+    <i class="fas fa-guitar"></i> 风格分类浏览
+</h3>
+
+<!-- 风格标签 -->
+<div class="mb-4">
+    {% set style_classes = {
+        '流行': 'style-pop', '摇滚': 'style-rock', '说唱': 'style-rap',
+        '电子': 'style-electronic', '古典': 'style-classical',
+        '民谣': 'style-folk', '爵士': 'style-jazz', 'R&B': 'style-rnb',
+        '其他': 'style-other'
+    } %}
+    <a href="{{ url_for('main.browse') }}"
+       class="style-tag" style="background: #2d1b69; {% if not current_style %}border: 2px solid var(--primary);{% endif %}">
+        <i class="fas fa-th"></i> 全部
+    </a>
+    {% for style in styles %}
+    <a href="{{ url_for('main.browse_by_style', style=style) }}"
+       class="style-tag {{ style_classes.get(style, 'style-other') }}"
+       style="{% if current_style == style %}border: 2px solid white; transform: scale(1.05);{% endif %}">
+        {{ style }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- 样式标题 -->
+{% if current_style %}
+<h4 class="text-light mb-3">
+    <i class="fas fa-music"></i> {{ current_style }}音乐
+    {% if songs %}<small class="text-muted ms-2">(共 {{ songs.total }} 首)</small>{% endif %}
+</h4>
+{% endif %}
+
+<!-- 歌曲卡片 -->
+{% if songs and songs.items %}
+<div class="row">
+    {% for song in songs.items %}
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card song-card h-100">
+            <span class="style-badge">{{ song.style }}</span>
+            <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                {% if song.cover_image %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                     class="card-img-top" alt="{{ song.title }}">
+                {% else %}
+                <div class="card-img-top d-flex align-items-center justify-content-center"
+                     style="height: 210px; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-deep));">
+                    <i class="fas fa-music" style="font-size: 2.5rem; opacity: 0.2;"></i>
+                </div>
+                {% endif %}
+                <div class="play-overlay">
+                    <div class="play-circle"><i class="fas fa-play"></i></div>
+                </div>
+            </a>
+            <div class="card-body">
+                <h6 class="card-title text-truncate">{{ song.title }}</h6>
+                <p class="card-text small text-truncate" style="color: var(--primary-light); margin: 0;">{{ song.artist }}</p>
+                <div class="d-flex justify-content-between mt-2">
+                    <small style="color: var(--text-muted);"><i class="far fa-heart"></i> {{ song.favorite_count }}</small>
+                    <small style="color: var(--text-muted);"><i class="far fa-comment"></i> {{ song.comment_count }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 分页 -->
+{% if songs.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if songs.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.browse_by_style', style=current_style, page=songs.prev_num) }}">上一页</a>
+        </li>
+        {% endif %}
+        {% for p in songs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {{ 'active' if p == songs.page else '' }}">
+            <a class="page-link" href="{{ url_for('main.browse_by_style', style=current_style, page=p) }}">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        {% endfor %}
+        {% if songs.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.browse_by_style', style=current_style, page=songs.next_num) }}">下一页</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% elif current_style %}
+<div class="empty-state">
+    <i class="fas fa-compact-disc"></i>
+    <p>还没有「{{ current_style }}」风格的音乐，快来上传第一首吧！</p>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('song.upload') }}" class="btn btn-primary mt-2">
+        <i class="fas fa-upload"></i> 上传音乐
+    </a>
+    {% endif %}
+</div>
+{% else %}
+<!-- 风格总览：展示带歌曲数量的风格卡片 -->
+{% set style_icons = {
+    '流行': 'fa-microphone-alt', '摇滚': 'fa-guitar', '说唱': 'fa-hat-cowboy',
+    '电子': 'fa-headphones', '古典': 'fa-violin', '民谣': 'fa-guitar',
+    '爵士': 'fa-drum', 'R&B': 'fa-music', '其他': 'fa-ellipsis-h'
+} %}
+{% set style_colors = {
+    '流行': 'e17055', '摇滚': '636e72', '说唱': '2d3436',
+    '电子': '00b894', '古典': '8b5cf6', '民谣': 'fdcb6e',
+    '爵士': '0984e3', 'R&B': 'e84393', '其他': '636e72'
+} %}
+<div class="row mt-3">
+    {% for sd in style_data %}
+    <div class="col-md-4 col-sm-6 mb-4 animate-in">
+        <a href="{{ url_for('main.browse_by_style', style=sd.name) }}" class="text-decoration-none">
+            <div class="card text-center p-4" style="cursor: pointer; transition: var(--transition);">
+                <i class="fas {{ style_icons.get(sd.name, 'fa-music') }} mb-3"
+                   style="font-size: 2.5rem; color: #{{ style_colors.get(sd.name, '8b5cf6') }};"></i>
+                <h5 class="text-light mb-1">{{ sd.name }}</h5>
+                <span class="badge mb-2" style="background: #{{ style_colors.get(sd.name, '8b5cf6') }}; font-size: 0.75rem;">
+                    {{ sd.count }} 首歌曲
+                </span>
+                <small class="text-muted d-block">点击浏览</small>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

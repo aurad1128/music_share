@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ playlist.name }} · 歌单详情 — 乐享{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('playlist.my_playlists') }}" class="btn btn-outline-light btn-sm me-2">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h3 class="text-light d-inline">
+            <i class="fas fa-list"></i> {{ playlist.name }}
+            {% if not playlist.is_public %}
+            <span class="badge" style="background: #636e72; font-size: 0.6rem;">私有</span>
+            {% endif %}
+        </h3>
+    </div>
+    {% if current_user.is_authenticated and current_user.id == playlist.owner.id %}
+    <div>
+        <a href="{{ url_for('playlist.edit', playlist_id=playlist.id) }}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-edit"></i> 编辑
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if playlist.description %}
+<p class="text-muted mb-3">{{ playlist.description }}</p>
+{% endif %}
+
+<p class="text-muted small mb-4">
+    创建者：{{ playlist.owner.username }} ·
+    创建时间：{{ playlist.created_at.strftime('%Y-%m-%d') }} ·
+    共 {{ playlist.songs.count() }} 首歌曲
+</p>
+
+{% if playlist.songs.count() > 0 %}
+<div>
+    {% for ps in playlist.songs.all() %}
+    <div class="playlist-song-item">
+        {% if ps.song_info.cover_image %}
+        <img src="{{ url_for('static', filename='uploads/covers/' + ps.song_info.cover_image) }}"
+             class="song-thumb" alt="{{ ps.song_info.title }}">
+        {% else %}
+        <div class="song-thumb d-flex align-items-center justify-content-center"
+             style="background: linear-gradient(135deg,#2d1b69,var(--primary));">
+            <i class="fas fa-music" style="color: rgba(255,255,255,0.3); font-size: 0.8rem;"></i>
+        </div>
+        {% endif %}
+        <div class="flex-grow-1 min-w-0">
+            <a href="{{ url_for('song.detail', song_id=ps.song_info.id) }}"
+               class="text-decoration-none" style="color: #e0e0e0; font-weight: 500;">
+                {{ ps.song_info.title }}
+            </a>
+            <small class="d-block" style="color: var(--primary);">{{ ps.song_info.artist }}</small>
+        </div>
+        <small class="text-muted">{{ ps.song_info.style }}</small>
+        {% if current_user.is_authenticated and current_user.id == playlist.user_id %}
+        <form method="POST" action="{{ url_for('playlist.remove_song', playlist_id=playlist.id, song_id=ps.song_info.id) }}"
+              class="ms-3">
+            <button type="submit" class="btn btn-sm text-muted" title="移除歌曲">
+                <i class="fas fa-times"></i>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-music"></i>
+    <p>歌单中还没有歌曲</p>
+    <small class="text-muted">浏览歌曲并添加到歌单吧</small>
+</div>
+{% endif %}
+{% endblock %}

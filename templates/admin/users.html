@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}用户管理 · 管理后台 — 乐享{% endblock %}
+
+{% block content %}
+<h3 class="text-light mb-4">
+    <i class="fas fa-shield-alt" style="color: var(--accent);"></i> 管理员后台
+</h3>
+
+<div class="row">
+    <!-- 侧栏 -->
+    <div class="col-lg-3 mb-4">
+        <div class="admin-sidebar">
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.dashboard') }}" class="list-group-item">
+                    <i class="fas fa-tachometer-alt me-2"></i> 仪表盘
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="list-group-item active">
+                    <i class="fas fa-users me-2"></i> 用户管理
+                </a>
+                <a href="{{ url_for('admin.songs') }}" class="list-group-item">
+                    <i class="fas fa-music me-2"></i> 歌曲管理
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户列表 -->
+    <div class="col-lg-9">
+        <div class="card p-3">
+            <h5 class="text-light mb-3">
+                <i class="fas fa-users"></i> 用户管理
+                <small class="text-muted ms-2">(共 {{ users.total }} 个用户)</small>
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle" style="--bs-table-bg: transparent;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>注册时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users.items %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td><small>{{ user.email }}</small></td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                <span class="badge" style="background: var(--accent);">管理员</span>
+                                {% else %}
+                                <span class="badge" style="background: var(--primary);">普通用户</span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}"
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning mb-1"
+                                            title="切换角色">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        {% if user.role == 'admin' %}降为普通{% else %}升为管理{% endif %}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('确定要删除用户「{{ user.username }}」吗？此操作会同时删除该用户的所有数据，且不可撤销。');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger mb-1"
+                                            title="删除用户">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small">当前用户</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if not users.items %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox"></i> 暂无用户
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if users.pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if users.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for p in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                    <li class="page-item {{ 'active' if p == users.page else '' }}">
+                        <a class="page-link" href="{{ url_for('admin.users', page=p) }}">{{ p }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if users.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

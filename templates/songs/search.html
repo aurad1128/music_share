@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{% if query %}搜索 "{{ query }}" — {% endif %}乐享{% endblock %}
+
+{% block content %}
+<h3 class="text-light mb-3">
+    <i class="fas fa-search"></i> 音乐搜索
+</h3>
+
+<!-- 搜索框 -->
+<form action="{{ url_for('main.search') }}" method="GET" class="mb-4">
+    <div class="search-box" style="max-width: 600px;">
+        <input type="text" name="q" placeholder="输入歌曲名或歌手名..." value="{{ query }}" autofocus>
+        <button type="submit"><i class="fas fa-search"></i></button>
+    </div>
+</form>
+
+{% if query %}
+    {% if songs and songs.items %}
+    <p class="text-muted mb-3">
+        搜索 "<span style="color: var(--primary);">{{ query }}</span>" 共找到 <strong>{{ songs.total }}</strong> 首相关歌曲
+    </p>
+
+    <div class="row">
+        {% for song in songs.items %}
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card song-card h-100">
+                <span class="style-badge">{{ song.style }}</span>
+                <a href="{{ url_for('song.detail', song_id=song.id) }}">
+                    {% if song.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                         class="card-img-top" alt="{{ song.title }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center"
+                         style="height: 200px; background: linear-gradient(135deg, var(--bg-elevated), var(--primary-dark));">
+                        <i class="fas fa-music" style="font-size: 2.5rem; color: rgba(255,255,255,0.2);"></i>
+                    </div>
+                    {% endif %}
+                    <div class="play-overlay">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </a>
+                <div class="card-body">
+                    <h6 class="card-title text-truncate">{{ song.title }}</h6>
+                    <p class="card-text small text-truncate" style="color: var(--primary);">{{ song.artist }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    {% if songs.pages > 1 %}
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            {% if songs.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.search', q=query, page=songs.prev_num) }}">上一页</a>
+            </li>
+            {% endif %}
+            {% for p in songs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == songs.page else '' }}">
+                <a class="page-link" href="{{ url_for('main.search', q=query, page=p) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if songs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.search', q=query, page=songs.next_num) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <p>没有找到与 "<span style="color: var(--primary);">{{ query }}</span>" 相关的歌曲</p>
+        <small class="text-muted">试试其他关键词，如歌手名或歌曲名</small>
+    </div>
+    {% endif %}
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-search"></i>
+    <p>输入关键词开始搜索</p>
+    <small class="text-muted">支持按歌曲名称、歌手名称搜索</small>
+    <div class="mt-3">
+        <span class="text-muted small">热门搜索：</span>
+        <a href="?q=周杰伦" class="style-tag style-pop">周杰伦</a>
+        <a href="?q=Queen" class="style-tag style-rock">Queen</a>
+        <a href="?q=Alan" class="style-tag style-electronic">Alan Walker</a>
+        <a href="?q=贝多芬" class="style-tag style-classical">贝多芬</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}页面未找到 — 乐享{% endblock %}
+
+{% block content %}
+<div class="text-center" style="padding: 100px 20px;">
+    <div style="font-size: 8rem; font-weight: 900; letter-spacing: -0.05em;
+                background: linear-gradient(135deg, var(--primary), var(--accent));
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                background-clip: text; opacity: 0.8; line-height: 1;">
+        404
+    </div>
+    <h3 class="text-light mt-3 mb-2">页面未找到</h3>
+    <p class="text-muted mb-4">你访问的页面不存在或已被移除</p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i>返回首页
+        </a>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light">
+            <i class="fas fa-compass me-2"></i>浏览音乐
+        </a>
+    </div>
+</div>
+{% endblock %}

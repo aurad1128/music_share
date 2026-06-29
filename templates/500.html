@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}服务器错误 — 乐享{% endblock %}
+
+{% block content %}
+<div class="text-center" style="padding: 100px 20px;">
+    <div style="font-size: 8rem; font-weight: 900; letter-spacing: -0.05em;
+                background: linear-gradient(135deg, #ef4444, #f59e0b);
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                background-clip: text; opacity: 0.8; line-height: 1;">
+        500
+    </div>
+    <h3 class="text-light mt-3 mb-2">服务器出了点问题</h3>
+    <p class="text-muted mb-4">请稍后重试，如果问题持续请联系管理员</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+        <i class="fas fa-redo me-2"></i>刷新页面
+    </a>
+</div>
+{% endblock %}

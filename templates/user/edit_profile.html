@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}编辑资料 — 乐享{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card p-4 animate-in">
+            <h4 class="mb-4" style="font-weight: 700;">
+                <i class="fas fa-user-edit me-2" style="color: var(--primary-light);"></i>编辑个人资料
+            </h4>
+
+            <form method="POST" enctype="multipart/form-data">
+                <!-- 当前头像预览 -->
+                <div class="text-center mb-4">
+                    <div class="position-relative d-inline-block">
+                        {% if current_user.avatar and current_user.avatar != 'default_avatar.png' %}
+                        <img id="avatar-preview"
+                             src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                             class="rounded-circle"
+                             style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary);">
+                        {% else %}
+                        <div id="avatar-preview"
+                             class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--accent)); font-size: 2.5rem; color: white; border: 3px solid var(--primary);">
+                            {{ current_user.username[0] }}
+                        </div>
+                        {% endif %}
+                        <label for="avatar-input" class="btn btn-sm btn-primary position-absolute"
+                               style="bottom: 0; right: 0; border-radius: 50%; width: 36px; height: 36px; padding: 0; line-height: 36px; cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="avatar-input" name="avatar" accept="image/*"
+                               style="display: none;" onchange="previewAvatar(this);">
+                    </div>
+                    <p class="small text-muted mt-2">点击相机图标更换头像（支持 png/jpg/gif/webp）</p>
+                </div>
+
+                <!-- 用户名（只读） -->
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 600;">用户名</label>
+                    <input type="text" class="form-control" value="{{ current_user.username }}" disabled
+                           style="opacity: 0.7; cursor: not-allowed;">
+                    <small class="text-muted">用户名不可修改</small>
+                </div>
+
+                <!-- 邮箱（只读） -->
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 600;">邮箱</label>
+                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled
+                           style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+
+                <!-- 个人简介 -->
+                <div class="mb-3">
+                    <label for="bio" class="form-label" style="font-weight: 600;">
+                        <i class="fas fa-pencil-alt me-1"></i>个人简介
+                    </label>
+                    <textarea class="form-control" id="bio" name="bio" rows="5"
+                              placeholder="介绍一下你自己吧…（最多 500 字）"
+                              maxlength="500"
+                              style="resize: vertical; min-height: 120px;">{{ current_user.bio }}</textarea>
+                    <small class="text-muted" id="bio-counter">0 / 500</small>
+                </div>
+
+                <!-- 角色徽章 -->
+                <div class="mb-4">
+                    <label class="form-label" style="font-weight: 600;">角色</label>
+                    <div>
+                        {% if current_user.is_admin() %}
+                        <span class="badge" style="background: #f472b6; padding: 8px 16px; font-size: 0.9rem;">🔴 管理员</span>
+                        {% else %}
+                        <span class="badge" style="background: #8b5cf6; padding: 8px 16px; font-size: 0.9rem;">🔵 普通用户</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 按钮 -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-save me-2"></i>保存修改
+                    </button>
+                    <a href="{{ url_for('main.user_profile', user_id=current_user.id) }}"
+                       class="btn btn-outline-light">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 头像预览
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('avatar-preview');
+            preview.style.background = 'none';
+            preview.innerHTML = '';
+            preview.style.backgroundImage = 'url(' + e.target.result + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// 简介字数统计
+var bioTextarea = document.getElementById('bio');
+var bioCounter = document.getElementById('bio-counter');
+bioCounter.textContent = bioTextarea.value.length + ' / 500';
+bioTextarea.addEventListener('input', function() {
+    bioCounter.textContent = this.value.length + ' / 500';
+});
+</script>
+{% endblock %}

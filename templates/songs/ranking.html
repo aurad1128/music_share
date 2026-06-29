@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}音乐排行榜 — 乐享{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <h3 class="mb-2" style="font-weight: 800; letter-spacing: -0.02em;">
+        <i class="fas fa-trophy" style="color: #f59e0b;"></i> 音乐排行榜
+    </h3>
+    <p style="color: var(--text-muted); margin-bottom: 28px;">
+        按收藏数/评论数/播放数实时排名，发现最受欢迎的音乐作品
+    </p>
+
+    <!-- Tab 切换 -->
+    <div class="rank-tabs">
+        <button class="rank-tab {{ 'active' if sort_by == 'favorites' else '' }}"
+                onclick="window.location.href='{{ url_for('main.ranking', sort='favorites', period=period) }}'">
+            <i class="fas fa-heart me-1"></i>收藏排行
+        </button>
+        <button class="rank-tab {{ 'active' if sort_by == 'comments' else '' }}"
+                onclick="window.location.href='{{ url_for('main.ranking', sort='comments', period=period) }}'">
+            <i class="fas fa-comments me-1"></i>评论排行
+        </button>
+        <button class="rank-tab {{ 'active' if sort_by == 'plays' else '' }}"
+                onclick="window.location.href='{{ url_for('main.ranking', sort='plays', period=period) }}'">
+            <i class="fas fa-play me-1"></i>播放排行
+        </button>
+    </div>
+
+    <!-- 时间筛选 -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="{{ url_for('main.ranking', sort=sort_by, period='all') }}"
+           class="btn btn-sm {{ 'btn-primary' if period == 'all' or not period else 'btn-outline-light' }}">
+            <i class="fas fa-infinity me-1"></i>全部
+        </a>
+        <a href="{{ url_for('main.ranking', sort=sort_by, period='week') }}"
+           class="btn btn-sm {{ 'btn-primary' if period == 'week' else 'btn-outline-light' }}">
+            <i class="fas fa-calendar-week me-1"></i>本周
+        </a>
+        <a href="{{ url_for('main.ranking', sort=sort_by, period='month') }}"
+           class="btn btn-sm {{ 'btn-primary' if period == 'month' else 'btn-outline-light' }}">
+            <i class="fas fa-calendar-alt me-1"></i>本月
+        </a>
+    </div>
+
+    <!-- 排行列表 -->
+    {% if songs and songs.items %}
+    <div class="card-stagger">
+        {% for song in songs.items %}
+        <a href="{{ url_for('song.detail', song_id=song.id) }}"
+           class="rank-item text-decoration-none animate-in">
+            <!-- 排名 -->
+            <span class="rank-number rank-{{ loop.index if loop.index <= 3 else '' }}"
+                  style="{% if loop.index > 3 %}color: var(--text-muted); background: var(--bg-glass);{% endif %}">
+                {{ loop.index }}
+            </span>
+
+            <!-- 封面 -->
+            {% if song.cover_image %}
+            <img src="{{ url_for('static', filename='uploads/covers/' + song.cover_image) }}"
+                 class="rank-cover" alt="{{ song.title }}">
+            {% else %}
+            <div class="rank-cover-ph">
+                <i class="fas fa-music"></i>
+            </div>
+            {% endif %}
+
+            <!-- 信息 -->
+            <div class="rank-info">
+                <div class="rank-title">{{ song.title }}</div>
+                <div class="rank-artist">{{ song.artist }}</div>
+                {% if song.album %}
+                <small style="color: var(--text-muted);">{{ song.album }}</small>
+                {% endif %}
+            </div>
+
+            <!-- 统计数据 -->
+            <div class="rank-stats">
+                <div class="rank-stat">
+                    <div class="rank-stat-val" style="color: {{ '#ef4444' if sort_by == 'favorites' else 'var(--text-primary)' }};">
+                        {{ song.favorite_count }}
+                    </div>
+                    <div class="rank-stat-lbl">收藏</div>
+                </div>
+                <div class="rank-stat">
+                    <div class="rank-stat-val" style="color: {{ '#3b82f6' if sort_by == 'comments' else 'var(--text-primary)' }};">
+                        {{ song.comment_count }}
+                    </div>
+                    <div class="rank-stat-lbl">评论</div>
+                </div>
+                <div class="rank-stat">
+                    <div class="rank-stat-val" style="color: {{ '#10b981' if sort_by == 'plays' else 'var(--text-primary)' }};">
+                        {{ song.play_count }}
+                    </div>
+                    <div class="rank-stat-lbl">播放</div>
+                </div>
+            </div>
+
+            <!-- 风格标签 -->
+            <span style="flex-shrink: 0;" class="style-tag {{ {
+                '流行':'style-pop','摇滚':'style-rock','说唱':'style-rap',
+                '电子':'style-electronic','古典':'style-classical',
+                '民谣':'style-folk','爵士':'style-jazz','R&B':'style-rnb'
+            }.get(song.style, 'style-other') }} d-none d-md-inline-block" style="font-size: 0.7rem; padding: 4px 12px;">
+                {{ song.style }}
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    {% if songs.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if songs.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.ranking', sort=sort_by, page=songs.prev_num) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            {% for p in songs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == songs.page else '' }}">
+                <a class="page-link" href="{{ url_for('main.ranking', sort=sort_by, page=p) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if songs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.ranking', sort=sort_by, page=songs.next_num) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-trophy"></i>
+        <p>暂无排行数据</p>
+        <small>还没有歌曲被收藏或评论，快去发现音乐吧！</small>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

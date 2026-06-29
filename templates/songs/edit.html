@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}编辑歌曲 — {{ song.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h3 class="text-light mb-4">
+                <i class="fas fa-edit" style="color: var(--primary);"></i> 编辑歌曲
+            </h3>
+
+            <form method="POST" action="{{ url_for('song.edit', song_id=song.id) }}" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="title" class="form-label">歌曲名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               value="{{ song.title }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="artist" class="form-label">歌手名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="artist" name="artist"
+                               value="{{ song.artist }}" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="album" class="form-label">专辑名称</label>
+                    <input type="text" class="form-control" id="album" name="album" value="{{ song.album }}">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="style" class="form-label">音乐风格</label>
+                        <select class="form-select" id="style" name="style">
+                            {% for style in styles %}
+                            <option value="{{ style }}" {% if style == song.style %}selected{% endif %}>
+                                {{ style }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cover_image" class="form-label">更新封面图</label>
+                        <input type="file" class="form-control" id="cover_image" name="cover_image"
+                               accept="image/png, image/jpeg, image/gif, image/webp"
+                               onchange="previewCover(this)">
+                        {% if song.cover_image %}
+                        <small class="text-muted">当前有封面图，上传新图将替换。</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3 text-center" id="cover-preview-container" style="display: none;">
+                    <img id="cover-preview" src="#" alt="封面预览"
+                         style="max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: cover;">
+                </div>
+
+                <div class="mb-3">
+                    <label for="audio_url" class="form-label">音频/视频链接</label>
+                    <input type="url" class="form-control" id="audio_url" name="audio_url"
+                           value="{{ song.audio_url }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">歌曲简介</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ song.description }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存修改
+                    </button>
+                    <a href="{{ url_for('song.detail', song_id=song.id) }}" class="btn btn-outline-light">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewCover(input) {
+    const container = document.getElementById('cover-preview-container');
+    const preview = document.getElementById('cover-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            container.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
